@@ -1,42 +1,46 @@
-DROP TABLE IF EXISTS products;
-DROP TABLE IF EXISTS categories;
-DROP TABLE IF EXISTS users;
-
-CREATE TABLE users (
-  id              SERIAL PRIMARY KEY,
-  name            VARCHAR(200) NOT NULL,
-  email           VARCHAR(150) UNIQUE NOT NULL,
-  hashed_password VARCHAR(200) NOT NULL,
-  role            VARCHAR(20) NOT NULL DEFAULT 'user'
-                  CHECK (role IN ('admin', 'user', 'trader')),
-  status          VARCHAR(20) NOT NULL DEFAULT 'approved'
-                  CHECK (status IN ('pending', 'approved', 'rejected')),
-  created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- planning db
+-- //user
+create table users(
+    id serial primary key,
+    name varchar(200) not null,
+    email varchar(150) unique not null,
+    hashed_password varchar(200) not null,
+    role varchar(20) not null default 'user' check (role in ('admin', 'user', 'trader')),
+    status varchar(20) not null default 'approved' check (status in ('pending', 'approved', 'rejected')),
+    created_at timestamp default current_timestamp,
+    updated_at timestamp default current_timestamp
 );
 
-CREATE TABLE categories (
-  id          SERIAL PRIMARY KEY,
-  name        VARCHAR(30) NOT NULL UNIQUE,
-  description TEXT,
-  is_archived BOOLEAN DEFAULT true,
-  status      VARCHAR(20) NOT NULL DEFAULT 'approved'
-              CHECK (status IN ('pending', 'approved', 'rejected')),
-  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+create table categories(
+    id serial primary key,
+    name varchar(30) not null unique,
+    description text,
+    is_archived boolean default true,
+    status varchar(20) not null default 'approved' check (status in ('pending', 'approved', 'rejected')),
+    created_at timestamp default current_timestamp,
+    updated_at timestamp default current_timestamp
 );
 
-CREATE TABLE products (
-  id          SERIAL PRIMARY KEY,
-  name        VARCHAR(200) NOT NULL,
-  description TEXT,
-  price       NUMERIC(10, 2) NOT NULL,
-  stock       INTEGER DEFAULT 0,
-  image_url   TEXT,
-  category_id INTEGER NOT NULL,
-  created_by  INTEGER NOT NULL,
-  created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT,
-  FOREIGN KEY (created_by)  REFERENCES users(id)      ON DELETE CASCADE
+create table products(
+    id serial primary key,
+    name varchar(200) not null,
+    description text,
+    price numeric (10, 2) not null,
+    stock integer default 0,
+    image_url text,
+    category_id integer not null, -- category => 1-m
+    created_by integer not null, -- user => 1-m
+    created_at timestamp default current_timestamp,
+    updated_at timestamp default current_timestamp,
+    foreign key (category_id) references categories(id) on delete restrict,
+    foreign key (created_by) references users(id) on delete cascade
+);
+
+
+create table refresh_tokens(
+    id serial primary key,
+    user_id integer not null references users(id) on delete cascade,
+    token_hash varchar(64) not null unique,
+    expires_at timestamptz not null,
+    created_at timestamptz default current_timestamp
 );

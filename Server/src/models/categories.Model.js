@@ -1,5 +1,6 @@
 import pool from "../config/db.js";
 
+// CREATE
 export const createCategory = async ({ name, description, status = "approved" }) => {
   const result = await pool.query(
     `
@@ -12,13 +13,16 @@ export const createCategory = async ({ name, description, status = "approved" })
   return result.rows[0];
 };
 
+// READ: الكل
 export const getAllCategories = async () => {
   const result = await pool.query(`
     SELECT * FROM categories
+    ORDER BY id
   `);
   return result.rows;
 };
 
+// READ: حسب id
 export const getCategoryById = async (id) => {
   const result = await pool.query(
     `
@@ -29,6 +33,7 @@ export const getCategoryById = async (id) => {
   return result.rows[0];
 };
 
+// READ: حسب الاسم (منستخدمها نتأكد إن الاسم مش مكرر قبل الإنشاء)
 export const getCategoryByName = async (name) => {
   const result = await pool.query(
     `
@@ -39,6 +44,8 @@ export const getCategoryByName = async (name) => {
   return result.rows[0];
 };
 
+// DELETE
+// ملاحظة: إذا الـ category فيها منتجات، PostgreSQL رح يرفض الحذف بسبب ON DELETE RESTRICT
 export const deleteCategory = async (id) => {
   const result = await pool.query(
     `
@@ -50,15 +57,18 @@ export const deleteCategory = async (id) => {
   return result.rows[0];
 };
 
+// UPDATE: بيعدّل بس الحقول اللي انبعتت
 export const updateCategory = async (id, name, description) => {
   const result = await pool.query(
     `
     UPDATE categories
-    SET name = $1, description = $2, updated_at = CURRENT_TIMESTAMP
+    SET name = COALESCE($1, name),
+        description = COALESCE($2, description),
+        updated_at = CURRENT_TIMESTAMP
     WHERE id = $3
     RETURNING *
     `,
-    [name, description, id]
+    [name ?? null, description ?? null, id]
   );
   return result.rows[0];
 };
